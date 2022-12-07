@@ -1,8 +1,6 @@
+from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
-
-
-bufferSize = 1024
 
 
 def run_client():
@@ -10,9 +8,9 @@ def run_client():
 
     while True:
         message = str.encode(input('Type something: '))
-        udp_socket.sendto(message, ("127.0.0.1", 20000))
+        udp_socket.sendto(message, (SERVER_IP, SERVER_PORT))
 
-        response, _ = udp_socket.recvfrom(bufferSize)
+        response, _ = udp_socket.recvfrom(BUFFER_SIZE)
         print(f"Server Response: {response}")
 
 
