@@ -3,3 +3,5 @@ from config.constants import (
     CONNECTION_REQUEST
 )
 from config.constants import COMMANDS
+
+from config.logger import get_logger

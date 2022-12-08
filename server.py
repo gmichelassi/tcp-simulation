@@ -2,9 +2,12 @@ from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP, COMMANDS
 from config import (
     CONNECTION_REQUEST
 )
+from config import get_logger
 from errors import AlreadyConnectedError, InvalidCommandError, UnknownClientError
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
+
+log = get_logger(__file__)
 
 
 class Server:
@@ -15,15 +18,18 @@ class Server:
         self.clients = []
 
     def run_server(self):
-        print("UDP server up and listening")
+        log.info("UDP server up and listening")
 
         while True:
             received_message, address = self.udp_socket.recvfrom(BUFFER_SIZE)
+            decoded_message = received_message.decode()
             ip_address = f'{address[0]}:{address[1]}'
+
+            log.info(f"Received message '{decoded_message}' from {ip_address}")
 
             try:
                 response = self.handle_request(
-                    message=received_message.decode(),
+                    message=decoded_message,
                     ip_address=ip_address
                 )
 
@@ -41,7 +47,12 @@ class Server:
 
         self.clients.append(ip_address)
 
-        return f"200: Connection between {ip_address} and server established."
+        message = f"200: Connection between {ip_address} and server established."
+
+        log.info(message)
+        log.info(f'Connected clients: {self.clients}')
+
+        return message
 
     def handle_request(self, message: str, **kwargs) -> str:
         if message not in COMMANDS:

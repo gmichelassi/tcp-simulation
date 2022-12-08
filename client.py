@@ -11,7 +11,7 @@ def run_client():
         udp_socket.sendto(message, (SERVER_IP, SERVER_PORT))
 
         response, _ = udp_socket.recvfrom(BUFFER_SIZE)
-        print(f"Server Response: {response}")
+        print(f"Server Response: {response.decode()}")
 
 
 if __name__ == '__main__':
