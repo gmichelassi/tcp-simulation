@@ -2,7 +2,7 @@ from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP, COMMANDS
 from config import (
     CONNECTION_REQUEST
 )
-from errors import InvalidCommandError, UnknownClientError
+from errors import AlreadyConnectedError, InvalidCommandError, UnknownClientError
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 
@@ -28,12 +28,17 @@ class Server:
                 )
 
                 self.send_message(response, address)
-            except InvalidCommandError as ICE:
-                self.send_message(str(ICE), address)
-            except UnknownClientError as UCE:
-                self.send_message(str(UCE), address)
+            except (
+                    AlreadyConnectedError,
+                    InvalidCommandError,
+                    UnknownClientError
+            ) as error:
+                self.send_message(str(error), address)
 
     def establish_connection(self, ip_address: str) -> str:
+        if ip_address in self.clients:
+            raise AlreadyConnectedError(ip_address=ip_address)
+
         self.clients.append(ip_address)
 
         return f"200: Connection between {ip_address} and server established."
