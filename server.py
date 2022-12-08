@@ -1,25 +1,60 @@
-from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP
+from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP, COMMANDS
+from config import (
+    CONNECTION_REQUEST
+)
+from errors import InvalidCommandError, UnknownClientError
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 
-message = "Hello, this is a UDP server!"
-encoded_message = str.encode(message)
 
+class Server:
+    def __init__(self):
+        self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
+        self.udp_socket.bind((SERVER_IP, SERVER_PORT))
 
-def run_server():
-    udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
-    udp_socket.bind((SERVER_IP, SERVER_PORT))
+        self.clients = []
 
-    print("UDP server up and listening")
+    def run_server(self):
+        print("UDP server up and listening")
 
-    while True:
-        received_message, address = udp_socket.recvfrom(BUFFER_SIZE)
+        while True:
+            received_message, address = self.udp_socket.recvfrom(BUFFER_SIZE)
+            ip_address = f'{address[0]}:{address[1]}'
 
-        print(f"Client's message: {received_message}")
-        print(f"Client's IP Address: {address}")
+            try:
+                response = self.handle_request(
+                    message=received_message.decode(),
+                    ip_address=ip_address
+                )
 
-        udp_socket.sendto(encoded_message, address)
+                self.send_message(response, address)
+            except InvalidCommandError as ICE:
+                self.send_message(str(ICE), address)
+            except UnknownClientError as UCE:
+                self.send_message(str(UCE), address)
+
+    def establish_connection(self, ip_address: str) -> str:
+        self.clients.append(ip_address)
+
+        return f"200: Connection between {ip_address} and server established."
+
+    def handle_request(self, message: str, **kwargs) -> str:
+        if message not in COMMANDS:
+            raise InvalidCommandError(command=message)
+
+        ip_address: str = kwargs['ip_address']
+
+        if message == CONNECTION_REQUEST:
+            return self.establish_connection(ip_address=ip_address)
+
+        if ip_address not in self.clients:
+            raise UnknownClientError(ip_address=ip_address)
+
+    def send_message(self, message: str, address: str):
+        self.udp_socket.sendto(str.encode(message), address)
 
 
 if __name__ == '__main__':
-    run_server()
+    server = Server()
+
+    server.run_server()
