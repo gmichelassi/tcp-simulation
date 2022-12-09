@@ -1,9 +1,0 @@
-07/12/2022 10:36:24 PM server.py    INFO     UDP server up and listening
-07/12/2022 10:36:28 PM server.py    INFO     Received message 'teste' from 127.0.0.1:58859
-07/12/2022 10:36:28 PM InvalidCommandError.py ERROR    500: Unknown command teste.
-07/12/2022 10:36:33 PM server.py    INFO     Received message 'connection_request' from 127.0.0.1:58859
-07/12/2022 10:36:33 PM server.py    INFO     200: Connection between 127.0.0.1:58859 and server established.
-07/12/2022 10:36:33 PM server.py    INFO     Connected clients: ['127.0.0.1:58859']
-07/12/2022 10:36:53 PM server.py    INFO     Received message 'connection_request' from 127.0.0.1:51630
-07/12/2022 10:36:53 PM server.py    INFO     200: Connection between 127.0.0.1:51630 and server established.
-07/12/2022 10:36:53 PM server.py    INFO     Connected clients: ['127.0.0.1:58859', '127.0.0.1:51630']
