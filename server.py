@@ -1,5 +1,6 @@
 from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP, COMMANDS
 from config import (
+    CONNECTION_FINISHED,
     CONNECTION_REQUEST,
     REQUEST_TO_SEND
 )
@@ -58,6 +59,9 @@ class Server:
         if message == CONNECTION_REQUEST:
             return self.establish_connection(ip_address=ip_address)
 
+        if message == CONNECTION_FINISHED:
+            return self.finish_connection(ip_address=ip_address)
+
         if message == REQUEST_TO_SEND:
             return self.request_to_send(ip_address=ip_address)
 
@@ -68,6 +72,19 @@ class Server:
         self.clients.append(ip_address)
 
         message = f"200: Connection between {ip_address} and server established."
+
+        log.info(message)
+        log.info(f'Connected clients: {self.clients}')
+
+        return message
+
+    def finish_connection(self, ip_address: str) -> str:
+        if ip_address not in self.clients:
+            raise UnknownClientError(ip_address=ip_address)
+
+        self.clients.remove(ip_address)
+
+        message = f"200: Connection between {ip_address} and server finished."
 
         log.info(message)
         log.info(f'Connected clients: {self.clients}')
