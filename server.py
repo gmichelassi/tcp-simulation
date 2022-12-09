@@ -54,7 +54,7 @@ class Server:
         if message not in COMMANDS:
             raise InvalidCommandError(command=message)
 
-        ip_address: str = kwargs['ip_address']
+        ip_address: tuple[str, int] = kwargs['ip_address']
 
         if message == CONNECTION_REQUEST:
             return self.establish_connection(ip_address=ip_address)
@@ -65,7 +65,7 @@ class Server:
         if message == REQUEST_TO_SEND:
             return self.request_to_send(ip_address=ip_address)
 
-    def establish_connection(self, ip_address: str) -> str:
+    def establish_connection(self, ip_address: tuple[str, int]) -> str:
         if ip_address in self.clients:
             raise AlreadyConnectedError(ip_address=ip_address)
 
@@ -78,7 +78,7 @@ class Server:
 
         return message
 
-    def finish_connection(self, ip_address: str) -> str:
+    def finish_connection(self, ip_address: tuple[str, int]) -> str:
         if ip_address not in self.clients:
             raise UnknownClientError(ip_address=ip_address)
 
@@ -91,7 +91,7 @@ class Server:
 
         return message
 
-    def request_to_send(self, ip_address: str):
+    def request_to_send(self, ip_address: tuple[str, int]):
         if ip_address not in self.clients:
             raise UnknownClientError(ip_address=ip_address)
 
@@ -102,8 +102,8 @@ class Server:
 
         return message
 
-    def send_message(self, message: str, address: str):
-        self.udp_socket.sendto(str.encode(message), address)
+    def send_message(self, message: str, ip_address: tuple[str, int]):
+        self.udp_socket.sendto(str.encode(message), ip_address)
 
 
 if __name__ == '__main__':
