@@ -8,7 +8,7 @@ class InvalidCommandError(Exception):
     def __init__(self, command: str):
         self.command = command
         self.status_code = 500
-        self.message = f'{self.status_code}: Unknown command {self.command}.'
+        self.message = f"{self.status_code}: Unknown command '{self.command}'."
 
         super().__init__()
 
