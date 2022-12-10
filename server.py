@@ -120,7 +120,7 @@ class Server:
         if ip_address not in self.authorized_clients:
             raise UnauthorizedClientError(ip_address=ip_address)
 
-        raise NotImplementedError('Function yet to be implemented')
+        raise NotImplementedError('500: Function yet to be implemented')
 
     def send_message(self, message: str, ip_address: tuple[str, int]):
         self.udp_socket.sendto(str.encode(message), ip_address)
