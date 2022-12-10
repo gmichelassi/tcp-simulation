@@ -2,10 +2,16 @@ from config import BUFFER_SIZE, SERVER_PORT, SERVER_IP, COMMANDS
 from config import (
     CONNECTION_FINISHED,
     CONNECTION_REQUEST,
-    REQUEST_TO_SEND
+    REQUEST_TO_SEND,
+    SEND_FILE
 )
 from config import get_logger
-from errors import AlreadyConnectedError, InvalidCommandError, UnknownClientError
+from errors import (
+    AlreadyConnectedError,
+    InvalidCommandError,
+    UnauthorizedClientError,
+    UnknownClientError,
+)
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 
@@ -38,7 +44,9 @@ class Server:
             except (
                 AlreadyConnectedError,
                 InvalidCommandError,
-                UnknownClientError
+                UnknownClientError,
+                UnauthorizedClientError,
+                NotImplementedError
             ) as error:
                 if ip_address is not None:
                     self.send_message(str(error), ip_address)
@@ -65,6 +73,9 @@ class Server:
 
         if message == REQUEST_TO_SEND:
             return self.request_to_send(ip_address=ip_address)
+
+        if message == SEND_FILE:
+            return self.receive_file(ip_address=ip_address)
 
     def establish_connection(self, ip_address: tuple[str, int]) -> str:
         if ip_address in self.clients:
@@ -104,6 +115,12 @@ class Server:
         log.info(f'Authorized clients: {self.clients}')
 
         return message
+
+    def receive_file(self, ip_address: tuple[str, int]):
+        if ip_address not in self.authorized_clients:
+            raise UnauthorizedClientError(ip_address=ip_address)
+
+        raise NotImplementedError('Function yet to be implemented')
 
     def send_message(self, message: str, ip_address: tuple[str, int]):
         self.udp_socket.sendto(str.encode(message), ip_address)

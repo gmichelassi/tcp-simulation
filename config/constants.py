@@ -5,6 +5,7 @@ BUFFER_SIZE = 1024
 CONNECTION_REQUEST = 'connection_request'
 CONNECTION_FINISHED = 'connection_finished'
 REQUEST_TO_SEND = 'request_to_send'
+SEND_FILE = 'send_file'
 
 COMMANDS = [
     CONNECTION_FINISHED,

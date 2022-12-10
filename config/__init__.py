@@ -2,7 +2,8 @@ from config.constants import SERVER_IP, SERVER_PORT, BUFFER_SIZE
 from config.constants import (
     CONNECTION_FINISHED,
     CONNECTION_REQUEST,
-    REQUEST_TO_SEND
+    REQUEST_TO_SEND,
+    SEND_FILE
 )
 from config.constants import COMMANDS
 
