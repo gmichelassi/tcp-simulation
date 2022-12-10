@@ -18,6 +18,7 @@ class Server:
         self.udp_socket.bind((SERVER_IP, SERVER_PORT))
 
         self.clients = []
+        self.authorized_clients = []
 
     def run_server(self):
         log.info("UDP server up and listening")
@@ -95,10 +96,12 @@ class Server:
         if ip_address not in self.clients:
             raise UnknownClientError(ip_address=ip_address)
 
+        self.authorized_clients.append(ip_address)
+
         message = f"200: Request from {ip_address} accepted."
 
-        self.send_message(message, ip_address)
         log.info(message)
+        log.info(f'Authorized clients: {self.clients}')
 
         return message
 
