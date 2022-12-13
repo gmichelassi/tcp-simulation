@@ -14,6 +14,7 @@ from errors import (
 )
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
+from tqdm import tqdm
 
 log = get_logger(__file__)
 
@@ -46,10 +47,12 @@ class Server:
                 InvalidCommandError,
                 UnknownClientError,
                 UnauthorizedClientError,
-                NotImplementedError
             ) as error:
                 if ip_address is not None:
                     self.send_message(str(error), ip_address)
+                log.error(str(error))
+            except NotImplementedError as NIE:
+                log.debug(str(NIE))
 
     def receive_message(self):
         received_message, address = self.udp_socket.recvfrom(BUFFER_SIZE)
@@ -109,7 +112,7 @@ class Server:
 
         self.authorized_clients.append(ip_address)
 
-        message = f"200: Request from {ip_address} accepted."
+        message = f"200: Request from {ip_address} accepted. You can now send your file."
 
         log.info(message)
         log.info(f'Authorized clients: {self.clients}')
@@ -120,7 +123,21 @@ class Server:
         if ip_address not in self.authorized_clients:
             raise UnauthorizedClientError(ip_address=ip_address)
 
-        raise NotImplementedError('500: Function yet to be implemented')
+        self.send_message(message='200: Receiving file', ip_address=ip_address)
+
+        filename = './files/teste.txt'
+        progress = tqdm(range(4096), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
+
+        with open(filename, "wb") as f:
+            while True:
+                bytes_read = self.udp_socket.recv(BUFFER_SIZE)
+
+                if not bytes_read:
+                    break
+
+                f.write(bytes_read)
+
+                progress.update(len(bytes_read))
 
     def send_message(self, message: str, ip_address: tuple[str, int]):
         self.udp_socket.sendto(str.encode(message), ip_address)
