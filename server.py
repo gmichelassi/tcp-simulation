@@ -125,8 +125,8 @@ class Server:
 
         self.send_message(message='200: Receiving file', ip_address=ip_address)
 
-        filename = './files/teste.txt'
-        progress = tqdm(range(4096), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
+        filename = './files/server_output.txt'
+        progress = tqdm(range(4096), f"Receiving file from {ip_address}", unit="B", unit_scale=True, unit_divisor=1024)
 
         with open(filename, "wb") as f:
             while True:
@@ -138,6 +138,7 @@ class Server:
                 f.write(bytes_read)
 
                 progress.update(len(bytes_read))
+                print(progress)
 
     def send_message(self, message: str, ip_address: tuple[str, int]):
         self.udp_socket.sendto(str.encode(message), ip_address)

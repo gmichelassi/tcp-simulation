@@ -1,6 +1,7 @@
 import re
 
 from config import BUFFER_SIZE, COMMANDS, SERVER_PORT, SERVER_IP
+from config import FILES
 from config import SEND_FILE
 from config import get_logger
 from socket import socket
@@ -29,10 +30,9 @@ class Client:
             response = self.receive_response()
 
             if self.send_file_command(command) and self.success_response(response):
-                print('INICIAR PROCESSO DE ENVIAR ARQUIVO')
-                filename = './files/lorem_ipsum_4096.txt'
+                filename, size = self.get_file()
 
-                progress = tqdm(range(4096), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
+                progress = tqdm(range(size), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
 
                 with open(filename, 'rb') as file:
                     while True:
@@ -44,6 +44,7 @@ class Client:
                         self.udp_socket.sendall(bytes_read)
 
                         progress.update(len(bytes_read))
+                        print(progress)
 
     def handle_command_input(self) -> str:
         log.info(f'Available commands: {COMMANDS}')
@@ -70,6 +71,12 @@ class Client:
     @staticmethod
     def send_file_command(command: str):
         return command == SEND_FILE
+
+    @staticmethod
+    def get_file():
+        selected_file = FILES[randint(0, len(FILES))]
+
+        return selected_file['name'], selected_file['size']
 
 
 if __name__ == '__main__':

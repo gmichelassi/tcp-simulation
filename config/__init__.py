@@ -7,4 +7,6 @@ from config.constants import (
 )
 from config.constants import COMMANDS
 
+from config.constants import FILES
+
 from config.logger import get_logger

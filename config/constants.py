@@ -13,3 +13,13 @@ COMMANDS = [
     REQUEST_TO_SEND,
     SEND_FILE
 ]
+
+FILE_1024 = './files/lorem_ipsum_1024.txt'
+FILE_2048 = './files/lorem_ipsum_2048.txt'
+FILE_4096 = './files/lorem_ipsum_4096.txt'
+
+FILES = [
+    {'name': FILE_1024, 'size': 1024},
+    {'name': FILE_2048, 'size': 2048},
+    {'name': FILE_4096, 'size': 4096},
+]
