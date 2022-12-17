@@ -11,10 +11,12 @@ from errors import (
     InvalidCommandError,
     UnauthorizedClientError,
     UnknownClientError,
+    MessageCorruptedError
 )
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from tqdm import tqdm
+from util import checksum
 
 log = get_logger(__file__)
 
@@ -47,6 +49,7 @@ class Server:
                 InvalidCommandError,
                 UnknownClientError,
                 UnauthorizedClientError,
+                MessageCorruptedError
             ) as error:
                 if ip_address is not None:
                     self.send_message(str(error), ip_address)
@@ -58,9 +61,15 @@ class Server:
         received_message, address = self.udp_socket.recvfrom(BUFFER_SIZE)
         decoded_message = received_message.decode()
 
-        log.info(f"Received message '{decoded_message}' from {address}")
+        header, command = decoded_message.split(": ")
+        client_id, message_id, message_checksum = header.split("-")
 
-        return decoded_message, address
+        if checksum(command, int(message_checksum[:-1])) != 0:
+            raise MessageCorruptedError(ip_address=address, message=command)
+
+        log.info(f"Received message '{decoded_message}' from {address} with checksum {message_checksum[:-1]}")
+
+        return command, address
 
     def handle_request(self, message: str, **kwargs) -> str:
         if message not in COMMANDS:

@@ -8,12 +8,12 @@ from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from random import randint
 from tqdm import tqdm
+from util import checksum
 
 log = get_logger(__file__)
 
 server_response = '[Server response]'
 success_response_regex = r"200:*"
-
 
 class Client:
     def __init__(self):
@@ -21,6 +21,7 @@ class Client:
         self.udp_socket.connect((SERVER_IP, SERVER_PORT))
 
         self.id = f'#{randint(0, 10000)}'
+        self.message_id = 0
 
         log.info(f'Client {self.id} communicating with server {SERVER_IP}:{SERVER_PORT}')
 
@@ -49,10 +50,17 @@ class Client:
     def handle_command_input(self) -> str:
         log.info(f'Available commands: {COMMANDS}')
         command = input('Server command: ')
-
-        self.send_command(command)
+        message = self.build_message(command)
+        self.send_message(message)
 
         return command
+
+    def build_message(self, command: str):
+        message = f'[{self.id}-{self.message_id}-{checksum(command)}]: {command}'
+
+        self.message_id += 1
+
+        return message
 
     def receive_response(self) -> str:
         response, _ = self.udp_socket.recvfrom(BUFFER_SIZE)
@@ -61,8 +69,8 @@ class Client:
 
         return response.decode()
 
-    def send_command(self, command: str):
-        self.udp_socket.send(str.encode(command))
+    def send_message(self, message: str):
+        self.udp_socket.send(str.encode(message))
 
     @staticmethod
     def success_response(response: str) -> bool:
