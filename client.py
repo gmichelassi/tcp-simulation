@@ -4,6 +4,7 @@ from config import BUFFER_SIZE, COMMANDS, SERVER_PORT, SERVER_IP
 from config import FILES
 from config import SEND_FILE
 from config import get_logger
+from errors import NoResponseError
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from random import randint
@@ -14,6 +15,7 @@ log = get_logger(__file__)
 
 server_response = '[Server response]'
 success_response_regex = r"200:*"
+
 
 class Client:
     def __init__(self):
@@ -27,25 +29,28 @@ class Client:
 
     def run_client(self):
         while True:
-            command = self.handle_command_input()
-            response = self.receive_response()
+            try:
+                command = self.handle_command_input()
+                response = self.receive_response(command)
 
-            if self.send_file_command(command) and self.success_response(response):
-                filename, size = self.get_file()
+                if self.send_file_command(command) and self.success_response(response):
+                    filename, size = self.get_file()
 
-                progress = tqdm(range(size), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
+                    progress = tqdm(range(size), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
 
-                with open(filename, 'rb') as file:
-                    while True:
-                        bytes_read = file.read(BUFFER_SIZE)
+                    with open(filename, 'rb') as file:
+                        while True:
+                            bytes_read = file.read(BUFFER_SIZE)
 
-                        if not bytes_read:
-                            break
+                            if not bytes_read:
+                                break
 
-                        self.udp_socket.sendall(bytes_read)
+                            self.udp_socket.sendall(bytes_read)
 
-                        progress.update(len(bytes_read))
-                        print(progress)
+                            progress.update(len(bytes_read))
+                            print(progress)
+            except NoResponseError:
+                continue
 
     def handle_command_input(self) -> str:
         log.info(f'Available commands: {COMMANDS}')
@@ -62,8 +67,19 @@ class Client:
 
         return message
 
-    def receive_response(self) -> str:
+    def receive_response(self, command: str, current_try: int = 0) -> str:
         response, _ = self.udp_socket.recvfrom(BUFFER_SIZE)
+
+        if current_try >= 1:
+            log.info(f"Trying '{command}': #{current_try}")
+
+        if current_try == 3:
+            raise NoResponseError()
+
+        if response.decode() == '':
+            log.warning('No response from server... trying again')
+            self.send_message(self.build_message(command))
+            self.receive_response(command, current_try + 1)
 
         log.info(f'{server_response} {response.decode()}')
 

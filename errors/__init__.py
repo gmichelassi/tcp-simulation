@@ -3,3 +3,5 @@ from errors.UnknownClientError import UnknownClientError
 from errors.AlreadyConnectedError import AlreadyConnectedError
 from errors.UnauthorizedClientError import UnauthorizedClientError
 from errors.MessageCorruptedError import MessageCorruptedError
+from errors.PacketLostError import PacketLostError
+from errors.NoResponseError import NoResponseError

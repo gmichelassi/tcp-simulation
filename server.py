@@ -11,8 +11,10 @@ from errors import (
     InvalidCommandError,
     UnauthorizedClientError,
     UnknownClientError,
-    MessageCorruptedError
+    MessageCorruptedError,
+    PacketLostError
 )
+from random import randint
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from tqdm import tqdm
@@ -28,6 +30,9 @@ class Server:
 
         self.clients = []
         self.authorized_clients = []
+
+        self.simulate_packet_loss = True
+        self.packet_loss_probabilty = 1
 
     def run_server(self):
         log.info("UDP server up and listening")
@@ -56,9 +61,16 @@ class Server:
                 log.error(str(error))
             except NotImplementedError as NIE:
                 log.debug(str(NIE))
+            except PacketLostError as PLE:
+                log.error(str(PLE))
+                self.send_message('', PLE.ip_address)
 
     def receive_message(self):
         received_message, address = self.udp_socket.recvfrom(BUFFER_SIZE)
+
+        if self.simulate_packet_loss and randint(0, 100) <= self.packet_loss_probabilty * 100:
+            raise PacketLostError(ip_address=address)
+
         decoded_message = received_message.decode()
 
         header, command = decoded_message.split(": ")
