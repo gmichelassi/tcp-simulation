@@ -34,21 +34,8 @@ class Client:
                 response = self.receive_response(command)
 
                 if self.send_file_command(command) and self.success_response(response):
-                    filename, size = self.get_file()
+                    self.send_file()
 
-                    progress = tqdm(range(size), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-
-                    with open(filename, 'rb') as file:
-                        while True:
-                            bytes_read = file.read(BUFFER_SIZE)
-
-                            if not bytes_read:
-                                break
-
-                            self.udp_socket.sendall(bytes_read)
-
-                            progress.update(len(bytes_read))
-                            print(progress)
             except NoResponseError:
                 continue
 
@@ -87,6 +74,25 @@ class Client:
 
     def send_message(self, message: str):
         self.udp_socket.send(str.encode(message))
+
+    def send_file(self):
+        filename, size = self.get_file()
+
+        progress = tqdm(range(size), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
+
+        with open(filename, 'rb') as file:
+            while True:
+                bytes_read = file.read(BUFFER_SIZE)
+
+                if not bytes_read:
+                    break
+
+                self.udp_socket.sendall(bytes_read)
+
+                progress.update(len(bytes_read))
+                print(progress)
+
+            file.close()
 
     @staticmethod
     def success_response(response: str) -> bool:

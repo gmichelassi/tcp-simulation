@@ -31,7 +31,7 @@ class Server:
         self.clients = []
         self.authorized_clients = []
 
-        self.simulate_packet_loss = True
+        self.simulate_packet_loss = False
         self.packet_loss_probabilty = 1
 
     def run_server(self):
@@ -149,17 +149,19 @@ class Server:
         filename = './files/server_output.txt'
         progress = tqdm(range(4096), f"Receiving file from {ip_address}", unit="B", unit_scale=True, unit_divisor=1024)
 
-        with open(filename, "wb") as f:
+        with open(filename, "wb") as file:
             while True:
                 bytes_read = self.udp_socket.recv(BUFFER_SIZE)
 
                 if not bytes_read:
                     break
 
-                f.write(bytes_read)
+                file.write(bytes_read)
 
                 progress.update(len(bytes_read))
                 print(progress)
+
+            file.close()
 
     def send_message(self, message: str, ip_address: tuple[str, int]):
         self.udp_socket.sendto(str.encode(message), ip_address)
