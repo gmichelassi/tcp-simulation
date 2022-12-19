@@ -1,18 +1,15 @@
-from config import get_logger
+from errors.BaseError import BaseError
 
 
-log = get_logger(__file__)
-
-
-class InvalidCommandError(Exception):
-    def __init__(self, command: str):
+class InvalidCommandError(BaseError):
+    def __init__(self, ip_address: tuple[str, int], command: str):
+        self.ip_address = ip_address
         self.command = command
         self.status_code = 500
-        self.message = f"{self.status_code}: Unknown command '{self.command}'."
+        self.message = f"Unknown command '{self.command}'."
 
-        super().__init__()
-
-    def __str__(self):
-        log.error(self.message)
-
-        return self.message
+        super().__init__(
+            ip_address=self.ip_address,
+            status_code=self.status_code,
+            message=self.message
+        )

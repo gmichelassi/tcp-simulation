@@ -1,18 +1,14 @@
-from config import get_logger
+from errors.BaseError import BaseError
 
 
-log = get_logger(__file__)
-
-
-class UnauthorizedClientError(Exception):
+class UnauthorizedClientError(BaseError):
     def __init__(self, ip_address: tuple[str, int]):
         self.ip_address = ip_address
         self.status_code = 401
-        self.message = f'{self.status_code}: Unauthorized client {self.ip_address}.'
+        self.message = f'Unauthorized client {self.ip_address}.'
 
-        super().__init__()
-
-    def __str__(self):
-        log.error(self.message)
-
-        return self.message
+        super().__init__(
+            ip_address=self.ip_address,
+            status_code=self.status_code,
+            message=self.message
+        )

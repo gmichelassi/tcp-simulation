@@ -1,6 +1,7 @@
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 20000
 BUFFER_SIZE = 1024
+MAX_TRIES = 3
 
 CONNECTION_REQUEST = 'connection_request'
 CONNECTION_FINISHED = 'connection_finished'

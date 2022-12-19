@@ -1,1 +1,1 @@
-from util.checksum import checksum
+from util.checksum import checksum, verify_checksum

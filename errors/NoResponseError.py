@@ -7,7 +7,7 @@ log = get_logger(__file__)
 class NoResponseError(Exception):
     def __init__(self):
         self.status_code = 500
-        self.message = f'{self.status_code}: Server did not respond.'
+        self.message = f'Server did not respond.'
 
         super().__init__()
 

@@ -1,19 +1,15 @@
-from config import get_logger
+from errors.BaseError import BaseError
 
 
-log = get_logger(__file__)
-
-
-class MessageCorruptedError(Exception):
+class MessageCorruptedError(BaseError):
     def __init__(self, ip_address: tuple[str, int], message: str):
         self.ip_address = ip_address
         self.message = message
         self.status_code = 500
-        self.message = f'{self.status_code}: Command {self.message} from {self.ip_address} corrupted.'
+        self.message = f'Command {self.message} from {self.ip_address} corrupted.'
 
-        super().__init__()
-
-    def __str__(self):
-        log.warning(self.message)
-
-        return self.message
+        super().__init__(
+            ip_address=self.ip_address,
+            status_code=self.status_code,
+            message=self.message
+        )
