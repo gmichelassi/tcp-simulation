@@ -14,15 +14,21 @@ from errors import (
     MessageCorruptedError,
     PacketLostError,
     UnauthorizedClientError,
-    UnknownClientError
+    UnknownClientError,
+    RcvBufferCapacityError,
+    MessageDuplicatedError
 )
 from random import randint
 from socket import (
     AF_INET,
     SOCK_DGRAM,
-    socket
+    socket,
+    SOL_SOCKET,
+    SO_RCVBUF
 )
 from util import checksum, verify_checksum
+import sys
+
 
 log = get_logger(__file__)
 
@@ -38,6 +44,16 @@ class Server:
         self.simulate_packet_loss = False
         self.packet_loss_probabilty = 1
 
+        self.actual_id = None
+
+        self.simulate_overflow_buffer = False
+        
+        if self.simulate_overflow_buffer:
+            self.udp_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, 24)
+            self.buffer_capacity = self.udp_socket.getsockopt(SOL_SOCKET, SO_RCVBUF)
+        else:
+            self.buffer_capacity = self.udp_socket.getsockopt(SOL_SOCKET, SO_RCVBUF)
+
     def run_server(self):
         log.info("UDP server up and listening")
 
@@ -50,7 +66,8 @@ class Server:
         response = None
 
         try:
-            client_id, message_id, message_type, message_info, message, ip_address = self.receive_message()
+            client_id, message_id, message_type, message_info, message, ip_address, client_ip_address = \
+                self.receive_message()
 
             response, status_code = self.handle_request(
                 client_id=client_id,
@@ -58,14 +75,16 @@ class Server:
                 message_type=message_type,
                 message_info=message_info,
                 message=message,
-                ip_address=ip_address
+                ip_address=ip_address,
             )
 
             header = self.make_response_header(
                 status_code=status_code,
                 message=response,
                 client_id=client_id,
-                message_id=message_id
+                message_id=message_id,
+                rcv_buffer_capacity=self.buffer_capacity,
+                client_ip_address=client_ip_address
             )
         except (
             AlreadyConnectedError,
@@ -73,7 +92,9 @@ class Server:
             MessageCorruptedError,
             PacketLostError,
             UnauthorizedClientError,
-            UnknownClientError
+            UnknownClientError,
+            RcvBufferCapacityError,
+            MessageDuplicatedError
         ) as error:
             response = error.message
             ip_address = error.ip_address
@@ -87,22 +108,31 @@ class Server:
                 self.send_message(header=header, message=response, ip_address=ip_address)
 
     def receive_message(self):
+        
         received_message, ip_address = self.udp_socket.recvfrom(BUFFER_SIZE)
-
+        
         if self.simulate_packet_loss and randint(0, 100) <= self.packet_loss_probabilty * 100:
             raise PacketLostError(ip_address=ip_address)
 
         decoded_message = received_message.decode()
 
         header, command = decoded_message.split(": ")
-        print(header)
-        client_id, message_id, message_type, message_info, message_checksum = header.split("-")
+     
+        client_id, message_id, message_type, message_info, client_ip_address, message_checksum = header.split("-")
 
         verify_checksum(message=command, message_checksum=int(message_checksum[:-1]), ip_address=ip_address)
-
-        log.info(f"Received message '{decoded_message}' from {ip_address} with checksum {message_checksum[:-1]}")
-
-        return client_id, message_id, message_type, message_info, command, ip_address
+      
+        if self.simulate_overflow_buffer and self.buffer_capacity < sys.getsizeof(command):
+            raise RcvBufferCapacityError(ip_address=ip_address)
+       
+        # TODO: Resolver bug do message id (verificar client_id and message_id)
+        if message_id == self.actual_id:
+            log.info("Message already received......discarding")
+            raise MessageDuplicatedError(ip_address=ip_address)
+        else:
+            self.actual_id = message_id
+            log.info(f"Received message '{decoded_message}' from {ip_address} with checksum {message_checksum[:-1]}")
+            return client_id, message_id, message_type, message_info, command, ip_address, client_ip_address
 
     def handle_request(
         self,
@@ -182,8 +212,15 @@ class Server:
         return f'Received packet {current_packet}/{total_packet} from {ip_address}', 200
 
     @staticmethod
-    def make_response_header(status_code: int, message: str, client_id: int = 0, message_id: int = 0):
-        return f'{status_code}-{client_id}-{message_id}-{checksum(message)}'
+    def make_response_header(
+            status_code: int,
+            message: str,
+            client_id: int = 0,
+            message_id: int = 0,
+            rcv_buffer_capacity: int = 0,
+            client_ip_address: tuple = ()
+    ):
+        return f'{status_code}-{client_id}-{message_id}-{rcv_buffer_capacity}-{client_ip_address}-{checksum(message)}'
 
     def send_message(self, header: str | None, message: str, ip_address: tuple[str, int]):
         self.udp_socket.sendto(str.encode(f'[{header}]: {message}'), ip_address)

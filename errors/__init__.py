@@ -5,3 +5,5 @@ from errors.UnauthorizedClientError import UnauthorizedClientError
 from errors.MessageCorruptedError import MessageCorruptedError
 from errors.PacketLostError import PacketLostError
 from errors.NoResponseError import NoResponseError
+from errors.RcvBufferCapacityError import RcvBufferCapacityError
+from errors.MessageDuplicatedError import MessageDuplicatedError
