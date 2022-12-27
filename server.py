@@ -44,7 +44,8 @@ class Server:
         self.simulate_packet_loss = False
         self.packet_loss_probabilty = 1
 
-        self.actual_id = None
+        self.last_message_id = None
+        self.last_client_id = None
 
         self.simulate_overflow_buffer = False
         
@@ -125,12 +126,12 @@ class Server:
         if self.simulate_overflow_buffer and self.buffer_capacity < sys.getsizeof(command):
             raise RcvBufferCapacityError(ip_address=ip_address)
        
-        # TODO: Resolver bug do message id (verificar client_id and message_id)
-        if message_id == self.actual_id:
+        if message_id == self.last_message_id and client_id == self.last_client_id:
             log.info("Message already received......discarding")
             raise MessageDuplicatedError(ip_address=ip_address)
         else:
-            self.actual_id = message_id
+            self.last_message_id = message_id
+            self.last_client_id = client_id
             log.info(f"Received message '{decoded_message}' from {ip_address} with checksum {message_checksum[:-1]}")
             return client_id, message_id, message_type, message_info, command, ip_address, client_ip_address
 
