@@ -1,6 +1,6 @@
 from config import BUFFER_SIZE, COMMANDS, SERVER_PORT, LOCALHOST, MAX_TRIES, ROUTER_PORT
 from config import FILES
-from config import SEND_FILE
+from config import SEND_FILE, OVERWHELM
 from config import get_logger
 from errors import NoResponseError
 from socket import socket
@@ -25,6 +25,7 @@ class Client:
         self.udp_socket.settimeout(5)
         self.simulate_timeout = False
         self.timeout_loss_probabilty = 1
+        self.overwhelm_message_amount = 10
 
         log.info(f'Client {self.id} communicating with server {LOCALHOST}:{ROUTER_PORT}')
 
@@ -49,6 +50,9 @@ class Client:
 
         if message == SEND_FILE:
             return self.send_file()
+
+        if message == OVERWHELM:
+            return self.overwhelm()
 
         return self.send_message(message)
 
@@ -83,6 +87,25 @@ class Client:
         selected_file = FILES[randint(0, len(FILES) - 1)]
 
         return selected_file['name'], selected_file['size']
+
+    def overwhelm(self):
+        formatted_message = ''
+        for i in range(self.overwhelm_message_amount):
+            message_info = f'[{i}]'
+            header = self.make_request_header(message=OVERWHELM, message_type='command', message_info=message_info)
+            formatted_message = self.build_message(header, message=OVERWHELM)
+            self.udp_socket.send(str.encode(formatted_message))
+
+            self.message_id += 1
+
+        for i in range(self.overwhelm_message_amount):
+            try:
+                response = self.receive_response(message=formatted_message)
+                log.info(response)
+            except NoResponseError:
+                log.warning(f'No response for message number #{i}.')
+
+        return
 
     def send_message(
         self,
