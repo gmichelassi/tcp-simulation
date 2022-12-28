@@ -1,4 +1,4 @@
-from config.constants import SERVER_IP, SERVER_PORT, ROUTER_PORT, BUFFER_SIZE, MAX_TRIES
+from config.constants import LOCALHOST, SERVER_PORT, ROUTER_PORT, BUFFER_SIZE, MAX_TRIES
 from config.constants import (
     CONNECTION_FINISHED,
     CONNECTION_REQUEST,

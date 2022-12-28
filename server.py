@@ -4,7 +4,8 @@ from config import (
     CONNECTION_FINISHED,
     CONNECTION_REQUEST,
     REQUEST_TO_SEND,
-    SERVER_IP,
+    LOCALHOST,
+    ROUTER_PORT,
     SERVER_PORT,
     get_logger
 )
@@ -36,7 +37,7 @@ log = get_logger(__file__)
 class Server:
     def __init__(self):
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
-        self.udp_socket.bind((SERVER_IP, SERVER_PORT))
+        self.udp_socket.bind((LOCALHOST, SERVER_PORT))
 
         self.clients = []
         self.authorized_clients = []
@@ -63,8 +64,8 @@ class Server:
 
     def listen(self):
         header = None
-        ip_address = None
         response = None
+        ip_address = None
 
         try:
             client_id, message_id, message_type, message_info, message, router_address, client_ip_address = \
@@ -100,10 +101,15 @@ class Server:
             MessageDuplicatedError
         ) as error:
             response = error.message
-            ip_address = error.ip_address
             status_code = error.status_code
 
-            header = self.make_response_header(status_code=status_code, message=response)
+            ip_address = (LOCALHOST, ROUTER_PORT)
+
+            header = self.make_response_header(
+                status_code=status_code,
+                message=response,
+                client_ip_address=error.ip_address
+            )
 
             str(error)
         finally:
@@ -233,6 +239,8 @@ class Server:
         return f'{status_code}-{client_id}-{message_id}-{rcv_buffer_capacity}-{client_ip_address}-{checksum(message)}'
 
     def send_message(self, header: str | None, message: str, ip_address: tuple[str, int]):
+        print(header)
+        print(message)
         print(ip_address)
         self.udp_socket.sendto(str.encode(f'[{header}]: {message}'), ip_address)
 

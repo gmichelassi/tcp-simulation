@@ -1,4 +1,4 @@
-from config import BUFFER_SIZE, COMMANDS, SERVER_PORT, SERVER_IP, MAX_TRIES
+from config import BUFFER_SIZE, COMMANDS, SERVER_PORT, LOCALHOST, MAX_TRIES, ROUTER_PORT
 from config import FILES
 from config import SEND_FILE
 from config import get_logger
@@ -17,7 +17,7 @@ server_response = '[Server response]'
 class Client:
     def __init__(self):
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
-        self.udp_socket.connect((SERVER_IP, SERVER_PORT))
+        self.udp_socket.connect((LOCALHOST, ROUTER_PORT))
          
         self.id = f'#{randint(0, 10000)}'
         self.message_id = 0
@@ -26,7 +26,7 @@ class Client:
         self.simulate_timeout = False
         self.timeout_loss_probabilty = 1
 
-        log.info(f'Client {self.id} communicating with server {SERVER_IP}:{SERVER_PORT}')
+        log.info(f'Client {self.id} communicating with server {LOCALHOST}:{ROUTER_PORT}')
 
     def run_client(self):
         while True:
@@ -95,7 +95,7 @@ class Client:
         self.udp_socket.send(str.encode(formatted_message))
 
         if self.simulate_timeout and randint(0, 100) <= self.timeout_loss_probabilty * 100:
-            log.info("Simulating timeout.....")
+            log.info("Simulating timeout...")
             time.sleep(5)
             self.udp_socket.send(str.encode(formatted_message))
 
@@ -115,7 +115,6 @@ class Client:
         return f'[{header}]: {message}'
 
     def receive_response(self, message: str, current_try: int = 0) -> str:
-
         if current_try >= 1:
             log.info(f"Re-try '{message}': #{current_try}")
 
@@ -133,7 +132,7 @@ class Client:
                 log.error("Buffer Overflow")
 
             verify_checksum(
-                message=command, message_checksum=int(response_checksum[:-1]), ip_address=(SERVER_IP, SERVER_PORT)
+                message=command, message_checksum=int(response_checksum[:-1]), ip_address=(LOCALHOST, SERVER_PORT)
             )
 
             if command == 'Packet lost.':
