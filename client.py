@@ -179,7 +179,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Client Simulation')
 
     parser.add_argument('-l', '--packetloss', help='simulate packet loss on server (boolean)', default=False, type=bool)
-    parser.add_argument('-p', '--timeoutlossprobability', help='probability of losing a packet (float, between 0 and 1)', default=0.5, type=float)
+    parser.add_argument('-p', '--timeoutlossprobability', help='probability of packet timeout (float, between 0 and 1)', default=0.5, type=float)
     parser.add_argument('-m', '--overloadmessageamount', help='amount of sequential messages to router (int)', default=10, type=int)
     parser.add_argument('-t', '--timeout', help='the client timeout value (int)', default=5, type=int)
 
