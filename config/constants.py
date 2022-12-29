@@ -8,14 +8,14 @@ CONNECTION_REQUEST = 'connection_request'
 CONNECTION_FINISHED = 'connection_finished'
 REQUEST_TO_SEND = 'request_to_send'
 SEND_FILE = 'send_file'
-OVERWHELM = 'overwhelm'
+OVERLOAD = 'overload'
 
 COMMANDS = [
     CONNECTION_FINISHED,
     CONNECTION_REQUEST,
     REQUEST_TO_SEND,
     SEND_FILE,
-    OVERWHELM
+    OVERLOAD
 ]
 
 FILE_1024 = './files/lorem_ipsum_1024.txt'

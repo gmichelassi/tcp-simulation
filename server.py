@@ -4,7 +4,7 @@ from config import (
     CONNECTION_FINISHED,
     CONNECTION_REQUEST,
     REQUEST_TO_SEND,
-    OVERWHELM,
+    OVERLOAD,
     LOCALHOST,
     ROUTER_PORT,
     SERVER_PORT,
@@ -171,8 +171,8 @@ class Server:
         if message == REQUEST_TO_SEND:
             return self.request_to_send(ip_address=ip_address)
 
-        if message == OVERWHELM:
-            return self.respond_overwhelm(ip_address=ip_address, message_info=message_info)
+        if message == OVERLOAD:
+            return self.respond_overload(ip_address=ip_address, message_info=message_info)
 
         if message_type == 'file':
             return self.receive_file(ip_address=ip_address, message=message, message_info=message_info)
@@ -203,13 +203,13 @@ class Server:
 
         return message, 200
 
-    def respond_overwhelm(self, ip_address: tuple[str, int], message_info: str) -> tuple[str, int]:
+    def respond_overload(self, ip_address: tuple[str, int], message_info: str) -> tuple[str, int]:
         if ip_address not in self.clients:
             raise UnknownClientError(ip_address=ip_address)
 
         current_message = message_info[1:-1].split(';')
 
-        message = f"[{current_message}] Overwhelm request from {ip_address}, testing server/router queue."
+        message = f"[{current_message}] Overload request from {ip_address}, testing server/router queue."
         log.info(message)
 
         return message, 200

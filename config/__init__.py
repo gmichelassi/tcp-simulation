@@ -4,7 +4,7 @@ from config.constants import (
     CONNECTION_REQUEST,
     REQUEST_TO_SEND,
     SEND_FILE,
-    OVERWHELM
+    OVERLOAD
 )
 from config.constants import COMMANDS
 
