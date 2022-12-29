@@ -4,6 +4,7 @@ from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from threading import Thread
 import re
+import time
 
 
 log = get_logger(__file__)
@@ -18,6 +19,8 @@ class Router:
 
         self.message_queue = []
         self.queue_max_size = 5
+        self.simulate_message_processing_delay = True
+        self.message_processing_delay = 1
 
     def run_router(self):
         log.info("Router up and listening")
@@ -30,20 +33,20 @@ class Router:
 
     def listen(self):
         while True:
-            message, ip_address = self.receive_message()
+            received_data = self.receive_message()
 
-            log.debug(message.decode())
-            log.debug(f'Queue size: {len(self.message_queue)}')
+            if received_data is None:
+                continue
 
     def forward(self):
         while True:
             if len(self.message_queue) == 0:
                 continue
 
-            current_message = self.message_queue[0]
+            if self.simulate_message_processing_delay:
+                time.sleep(self.message_processing_delay)
 
-            log.debug(f'Forwarding {current_message}')
-            log.debug(f'Message from server? {self.message_from_server(current_message.decode())}')
+            current_message = self.message_queue[0]
 
             if self.message_from_server(current_message.decode()):
                 address = self.get_address_from_message(current_message)
@@ -52,18 +55,26 @@ class Router:
 
             self.send_message(current_message, address)
 
-    def receive_message(self) -> tuple[bytes, tuple[str, int]]:
+    def receive_message(self) -> tuple[bytes, tuple[str, int]] | None:
         received_message, ip_address = self.udp_socket.recvfrom(BUFFER_SIZE)
 
         if len(self.message_queue) == self.queue_max_size:
-            raise RuntimeError('Router queue full.')
+            log.debug('Queue full. Ignoring message.')
+            return None
 
         self.message_queue.append(received_message)
+
+        log.debug(received_message.decode())
+        log.debug(f'Queue size: {len(self.message_queue)}')
 
         return received_message, ip_address
 
     def send_message(self, message: bytes, address: tuple[str, int]):
         self.message_queue.pop(0)
+
+        log.debug(f'Message from server? {self.message_from_server(message.decode())}')
+        log.debug(f'Forwarding {message.decode()}')
+        log.debug(f'Queue size: {len(self.message_queue)}')
 
         self.udp_socket.sendto(message, address)
 

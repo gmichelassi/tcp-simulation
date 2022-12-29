@@ -89,18 +89,19 @@ class Client:
         return selected_file['name'], selected_file['size']
 
     def overwhelm(self):
-        formatted_message = ''
+        sent_messages = []
         for i in range(self.overwhelm_message_amount):
             message_info = f'[{i}]'
             header = self.make_request_header(message=OVERWHELM, message_type='command', message_info=message_info)
             formatted_message = self.build_message(header, message=OVERWHELM)
+            sent_messages.append(formatted_message)
             self.udp_socket.send(str.encode(formatted_message))
 
             self.message_id += 1
 
-        for i in range(self.overwhelm_message_amount):
+        for i, message in enumerate(sent_messages):
             try:
-                response = self.receive_response(message=formatted_message)
+                response = self.receive_response(message=message)
                 log.info(response)
             except NoResponseError:
                 log.warning(f'No response for message number #{i}.')
@@ -161,14 +162,15 @@ class Client:
             if command == 'Packet lost.':
                 log.warning('No response from server... trying again')
                 self.udp_socket.send(str.encode(message))
-                self.receive_response(message, current_try + 1)
+                return self.receive_response(message, current_try + 1)
 
             log.info(f'{server_response} {status_code[1:]} - {command}')
 
             return response.decode()
         except TimeoutError:
             self.udp_socket.settimeout(2)
-            self.receive_response(message, current_try + 1)
+            self.udp_socket.send(str.encode(message))
+            return self.receive_response(message, current_try + 1)
 
 
 if __name__ == '__main__':
