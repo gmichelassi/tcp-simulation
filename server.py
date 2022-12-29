@@ -29,6 +29,8 @@ from socket import (
     SO_RCVBUF
 )
 from util import checksum, verify_checksum
+
+import argparse
 import sys
 
 
@@ -36,7 +38,12 @@ log = get_logger(__file__)
 
 
 class Server:
-    def __init__(self):
+    def __init__(
+        self,
+        packet_loss_probabilty: float,
+        simulate_overflow_buffer: bool,
+        simulate_packet_loss: bool
+    ):
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.udp_socket.bind((LOCALHOST, SERVER_PORT))
 
@@ -45,9 +52,9 @@ class Server:
         self.last_client_id = None
         self.last_message_id = None
 
-        self.packet_loss_probabilty = 1
-        self.simulate_overflow_buffer = False
-        self.simulate_packet_loss = False
+        self.packet_loss_probabilty = packet_loss_probabilty
+        self.simulate_overflow_buffer = simulate_overflow_buffer
+        self.simulate_packet_loss = simulate_packet_loss
         
         if self.simulate_overflow_buffer:
             self.udp_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, 24)
@@ -56,7 +63,7 @@ class Server:
             self.buffer_capacity = self.udp_socket.getsockopt(SOL_SOCKET, SO_RCVBUF)
 
     def run_server(self):
-        log.info("UDP server up and listening")
+        log.info("Server up and listening")
 
         while True:
             self.listen()
@@ -259,6 +266,21 @@ class Server:
 
 
 if __name__ == '__main__':
-    server = Server()
+    parser = argparse.ArgumentParser(description='TCP Server Simulation')
+
+    parser.add_argument('-l', '--packetloss', help='simulate packet loss on server (boolean)', default=False, type=bool)
+    parser.add_argument('-b', '--bufferoverflow', help='simulate buffer overflow (boolean)', default=False, type=bool)
+    parser.add_argument('-p', '--lossprobability', help='probability of losing a packet (float, between 0 and 1)', default=0.5, type=float)
+
+    args = parser.parse_args()
+
+    packet_loss_probabilty, simulate_packet_loss, simulate_overflow_buffer =\
+        args.lossprobability, args.packetloss, args.bufferoverflow,
+
+    server = Server(
+        packet_loss_probabilty=packet_loss_probabilty,
+        simulate_packet_loss=simulate_packet_loss,
+        simulate_overflow_buffer=simulate_overflow_buffer
+    )
 
     server.run_server()

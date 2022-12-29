@@ -7,6 +7,8 @@ from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from random import randint
 from util import checksum, verify_checksum
+
+import argparse
 import time
 
 log = get_logger(__file__)
@@ -15,17 +17,17 @@ server_response = '[Server response]'
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, timeout: int, simulate_timeout: bool, timeout_loss_probabilty: float, overload_message_amount: int):
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.udp_socket.connect((LOCALHOST, ROUTER_PORT))
          
         self.id = f'#{randint(0, 10000)}'
         self.message_id = 0
 
-        self.udp_socket.settimeout(5)
-        self.simulate_timeout = False
-        self.timeout_loss_probabilty = 1
-        self.overload_message_amount = 10
+        self.udp_socket.settimeout(timeout)
+        self.simulate_timeout = simulate_timeout
+        self.timeout_loss_probabilty = timeout_loss_probabilty
+        self.overload_message_amount = overload_message_amount
 
         log.info(f'Client {self.id} communicating with server {LOCALHOST}:{ROUTER_PORT}')
 
@@ -174,6 +176,23 @@ class Client:
 
 
 if __name__ == '__main__':
-    client = Client()
+    parser = argparse.ArgumentParser(description='Client Simulation')
+
+    parser.add_argument('-l', '--packetloss', help='simulate packet loss on server (boolean)', default=False, type=bool)
+    parser.add_argument('-p', '--timeoutlossprobability', help='probability of losing a packet (float, between 0 and 1)', default=0.5, type=float)
+    parser.add_argument('-m', '--overloadmessageamount', help='amount of sequential messages to router (int)', default=10, type=int)
+    parser.add_argument('-t', '--timeout', help='the client timeout value (int)', default=5, type=int)
+
+    args = parser.parse_args()
+
+    timeout, simulate_timeout, timeout_loss_probabilty, overload_message_amount = \
+        args.timeout, args.simulate_timeout, args.timeout_loss_probabilty, args.overload_message_amount
+
+    client = Client(
+        timeout=timeout,
+        simulate_timeout=simulate_timeout,
+        timeout_loss_probabilty=timeout_loss_probabilty,
+        overload_message_amount=overload_message_amount
+    )
 
     client.run_client()

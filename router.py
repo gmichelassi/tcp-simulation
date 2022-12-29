@@ -3,6 +3,8 @@ from config import get_logger
 from socket import socket
 from socket import AF_INET, SOCK_DGRAM
 from threading import Thread
+
+import argparse
 import re
 import time
 
@@ -13,14 +15,15 @@ SERVER_HEADER = r'.*[1-5]00-(#)?([0-9])*-([0-9])*.*'
 
 
 class Router:
-    def __init__(self):
+    def __init__(self, queue_max_size: int, simulate_message_processing_delay: bool, message_processing_delay: int):
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.udp_socket.bind((LOCALHOST, ROUTER_PORT))
 
         self.message_queue = []
-        self.queue_max_size = 5
-        self.simulate_message_processing_delay = True
-        self.message_processing_delay = 1
+
+        self.queue_max_size = queue_max_size
+        self.simulate_message_processing_delay = simulate_message_processing_delay
+        self.message_processing_delay = message_processing_delay
 
     def run_router(self):
         log.info("Router up and listening")
@@ -95,6 +98,21 @@ class Router:
 
 
 if __name__ == '__main__':
-    router = Router()
+    parser = argparse.ArgumentParser(description='Router Simulation')
+
+    parser.add_argument('-s', '--simulatedelay', help='simulate delay when forward message (boolean)', default=False, type=bool)
+    parser.add_argument('-d', '--delay', help='the delay to forward message (int)', default=1, type=int)
+    parser.add_argument('-q', '--queuemaxsize', help='the maximum size of the router queue (int)', default=5, type=int)
+
+    args = parser.parse_args()
+
+    queue_max_size, simulate_message_processing_delay, message_processing_delay = \
+        args.simulatedelay, args.delay, args.queuemaxsize
+
+    router = Router(
+        queue_max_size=queue_max_size,
+        simulate_message_processing_delay=simulate_message_processing_delay,
+        message_processing_delay=message_processing_delay
+    )
 
     router.run_router()
