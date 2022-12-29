@@ -31,6 +31,9 @@ class Router:
         listen_thread.start()
         forward_thread.start()
 
+        listen_thread.join()
+        forward_thread.join()
+
     def listen(self):
         while True:
             received_data = self.receive_message()

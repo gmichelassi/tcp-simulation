@@ -40,16 +40,14 @@ class Server:
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.udp_socket.bind((LOCALHOST, SERVER_PORT))
 
-        self.clients = []
         self.authorized_clients = []
-
-        self.simulate_packet_loss = False
-        self.packet_loss_probabilty = 1
-
-        self.last_message_id = None
+        self.clients = []
         self.last_client_id = None
+        self.last_message_id = None
 
+        self.packet_loss_probabilty = 1
         self.simulate_overflow_buffer = False
+        self.simulate_packet_loss = False
         
         if self.simulate_overflow_buffer:
             self.udp_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, 24)
