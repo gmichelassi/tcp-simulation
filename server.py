@@ -31,6 +31,7 @@ from socket import (
 from util import checksum, verify_checksum
 
 import argparse
+import time
 import sys
 
 
@@ -42,7 +43,8 @@ class Server:
         self,
         packet_loss_probabilty: float,
         simulate_overflow_buffer: bool,
-        simulate_packet_loss: bool
+        simulate_packet_loss: bool,
+        read_delay: int
     ):
         self.udp_socket = socket(family=AF_INET, type=SOCK_DGRAM)
         self.udp_socket.bind((LOCALHOST, SERVER_PORT))
@@ -55,6 +57,7 @@ class Server:
         self.packet_loss_probabilty = packet_loss_probabilty
         self.simulate_overflow_buffer = simulate_overflow_buffer
         self.simulate_packet_loss = simulate_packet_loss
+        self.read_delay = read_delay
         
         if self.simulate_overflow_buffer:
             self.udp_socket.setsockopt(SOL_SOCKET, SO_RCVBUF, 24)
@@ -124,6 +127,8 @@ class Server:
 
     def receive_message(self):
         received_message, router_address = self.udp_socket.recvfrom(BUFFER_SIZE)
+
+        time.sleep(self.read_delay)
 
         decoded_message = received_message.decode()
 
@@ -259,9 +264,6 @@ class Server:
         return f'{status_code}-{client_id}-{message_id}-{rcv_buffer_capacity}-{client_ip_address}-{checksum(message)}'
 
     def send_message(self, header: str | None, message: str, ip_address: tuple[str, int]):
-        print(header)
-        print(message)
-        print(ip_address)
         self.udp_socket.sendto(str.encode(f'[{header}]: {message}'), ip_address)
 
 
@@ -271,16 +273,18 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--packetloss', help='simulate packet loss on server (boolean)', default=False, type=bool)
     parser.add_argument('-b', '--bufferoverflow', help='simulate buffer overflow (boolean)', default=False, type=bool)
     parser.add_argument('-p', '--lossprobability', help='probability of losing a packet (float, between 0 and 1)', default=0.5, type=float)
+    parser.add_argument('-r', '--readdelay', help='the delay to read a message (int)', default=0, type=int)
 
     args = parser.parse_args()
 
-    packet_loss_probabilty, simulate_packet_loss, simulate_overflow_buffer =\
-        args.lossprobability, args.packetloss, args.bufferoverflow,
+    packet_loss_probabilty, simulate_packet_loss, simulate_overflow_buffer, read_delay =\
+        args.lossprobability, args.packetloss, args.bufferoverflow, args.readdelay
 
     server = Server(
         packet_loss_probabilty=packet_loss_probabilty,
         simulate_packet_loss=simulate_packet_loss,
-        simulate_overflow_buffer=simulate_overflow_buffer
+        simulate_overflow_buffer=simulate_overflow_buffer,
+        read_delay=read_delay
     )
 
     server.run_server()

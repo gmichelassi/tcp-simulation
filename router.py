@@ -107,7 +107,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     queue_max_size, simulate_message_processing_delay, message_processing_delay = \
-        args.simulatedelay, args.delay, args.queuemaxsize
+        args.queuemaxsize, args.simulatedelay, args.delay
 
     router = Router(
         queue_max_size=queue_max_size,
